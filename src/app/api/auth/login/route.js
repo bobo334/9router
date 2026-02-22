@@ -4,28 +4,42 @@ import bcrypt from "bcryptjs";
 import { SignJWT } from "jose";
 import { cookies } from "next/headers";
 
-const SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "9router-default-secret-change-me"
-);
+function getJwtSecret() {
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret) return null;
+  return new TextEncoder().encode(jwtSecret);
+}
 
 export async function POST(request) {
   try {
     const { password } = await request.json();
     const settings = await getSettings();
-
-    // Default password is '123456' if not set
     const storedHash = settings.password;
 
     let isValid = false;
+
     if (storedHash) {
       isValid = await bcrypt.compare(password, storedHash);
     } else {
-      // Use env var or default
-      const initialPassword = process.env.INITIAL_PASSWORD || "123456";
+      const initialPassword = process.env.INITIAL_PASSWORD;
+      if (!initialPassword) {
+        return NextResponse.json(
+          { error: "Password is not initialized. Set INITIAL_PASSWORD and restart." },
+          { status: 503 }
+        );
+      }
       isValid = password === initialPassword;
     }
 
     if (isValid) {
+      const secret = getJwtSecret();
+      if (!secret) {
+        return NextResponse.json(
+          { error: "Server misconfigured: JWT_SECRET is required" },
+          { status: 503 }
+        );
+      }
+
       const forceSecureCookie = process.env.AUTH_COOKIE_SECURE === "true";
       const forwardedProto = request.headers.get("x-forwarded-proto");
       const isHttpsRequest = forwardedProto === "https";
@@ -34,7 +48,7 @@ export async function POST(request) {
       const token = await new SignJWT({ authenticated: true })
         .setProtectedHeader({ alg: "HS256" })
         .setExpirationTime("24h")
-        .sign(SECRET);
+        .sign(secret);
 
       const cookieStore = await cookies();
       cookieStore.set("auth_token", token, {

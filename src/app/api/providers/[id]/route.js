@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { getProviderConnectionById, updateProviderConnection, deleteProviderConnection } from "@/models";
+import { requireDashboardAuth } from "@/lib/serverAuth";
 
 // GET /api/providers/[id] - Get single connection
 export async function GET(request, { params }) {
   try {
+    const auth = await requireDashboardAuth(request);
+    if (!auth.ok) return auth.response;
+
     const { id } = await params;
     const connection = await getProviderConnectionById(id);
 
@@ -28,6 +32,9 @@ export async function GET(request, { params }) {
 // PUT /api/providers/[id] - Update connection
 export async function PUT(request, { params }) {
   try {
+    const auth = await requireDashboardAuth(request);
+    if (!auth.ok) return auth.response;
+
     const { id } = await params;
     const body = await request.json();
     const { name, priority, globalPriority, defaultModel, isActive, apiKey, testStatus, lastError, lastErrorAt } = body;
@@ -67,6 +74,9 @@ export async function PUT(request, { params }) {
 // DELETE /api/providers/[id] - Delete connection
 export async function DELETE(request, { params }) {
   try {
+    const auth = await requireDashboardAuth(request);
+    if (!auth.ok) return auth.response;
+
     const { id } = await params;
 
     const deleted = await deleteProviderConnection(id);

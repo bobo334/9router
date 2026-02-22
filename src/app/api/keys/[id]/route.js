@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { deleteApiKey, getApiKeyById, updateApiKey } from "@/lib/localDb";
+import { requireDashboardAuth } from "@/lib/serverAuth";
 
 // GET /api/keys/[id] - Get single key
 export async function GET(request, { params }) {
   try {
+    const auth = await requireDashboardAuth(request);
+    if (!auth.ok) return auth.response;
+
     const { id } = await params;
     const key = await getApiKeyById(id);
     if (!key) {
@@ -19,6 +23,9 @@ export async function GET(request, { params }) {
 // PUT /api/keys/[id] - Update key
 export async function PUT(request, { params }) {
   try {
+    const auth = await requireDashboardAuth(request);
+    if (!auth.ok) return auth.response;
+
     const { id } = await params;
     const body = await request.json();
     const { isActive } = body;
@@ -43,6 +50,9 @@ export async function PUT(request, { params }) {
 // DELETE /api/keys/[id] - Delete API key
 export async function DELETE(request, { params }) {
   try {
+    const auth = await requireDashboardAuth(request);
+    if (!auth.ok) return auth.response;
+
     const { id } = await params;
 
     const deleted = await deleteApiKey(id);

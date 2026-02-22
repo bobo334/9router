@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { getSettings, updateSettings } from "@/lib/localDb";
 import bcrypt from "bcryptjs";
+import { requireDashboardAuth } from "@/lib/serverAuth";
 
-export async function GET() {
+export async function GET(request) {
   try {
+    const auth = await requireDashboardAuth(request);
+    if (!auth.ok) return auth.response;
+
     const settings = await getSettings();
     const { password, ...safeSettings } = settings;
     
@@ -22,6 +26,9 @@ export async function GET() {
 
 export async function PATCH(request) {
   try {
+    const auth = await requireDashboardAuth(request);
+    if (!auth.ok) return auth.response;
+
     const body = await request.json();
 
     // If updating password, hash it
@@ -37,12 +44,6 @@ export async function PATCH(request) {
         const isValid = await bcrypt.compare(body.currentPassword, currentHash);
         if (!isValid) {
           return NextResponse.json({ error: "Invalid current password" }, { status: 401 });
-        }
-      } else {
-        // First time setting password, no current password needed
-        // Allow empty currentPassword or default "123456"
-        if (body.currentPassword && body.currentPassword !== "123456") {
-           return NextResponse.json({ error: "Invalid current password" }, { status: 401 });
         }
       }
 

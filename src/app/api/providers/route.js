@@ -2,10 +2,14 @@ import { NextResponse } from "next/server";
 import { getProviderConnections, createProviderConnection, getProviderNodeById } from "@/models";
 import { APIKEY_PROVIDERS } from "@/shared/constants/config";
 import { isOpenAICompatibleProvider, isAnthropicCompatibleProvider } from "@/shared/constants/providers";
+import { requireDashboardAuth } from "@/lib/serverAuth";
 
 // GET /api/providers - List all connections
-export async function GET() {
+export async function GET(request) {
   try {
+    const auth = await requireDashboardAuth(request);
+    if (!auth.ok) return auth.response;
+
     const connections = await getProviderConnections();
     
     // Hide sensitive fields
@@ -27,6 +31,9 @@ export async function GET() {
 // POST /api/providers - Create new connection (API Key only, OAuth via separate flow)
 export async function POST(request) {
   try {
+    const auth = await requireDashboardAuth(request);
+    if (!auth.ok) return auth.response;
+
     const body = await request.json();
     const { provider, apiKey, name, priority, globalPriority, defaultModel, testStatus } = body;
 

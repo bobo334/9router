@@ -24,15 +24,15 @@ export async function POST(request) {
     const mappedConnections = connections.map(conn => ({
       provider: conn.provider,
       authType: conn.authType,
-      apiKey: conn.apiKey || null,
-      accessToken: conn.accessToken || null,
-      refreshToken: conn.refreshToken || null,
       projectId: conn.projectId || null,
       expiresAt: conn.expiresAt,
       priority: conn.priority,
       globalPriority: conn.globalPriority,
       defaultModel: conn.defaultModel,
-      isActive: conn.isActive
+      isActive: conn.isActive,
+      hasApiKey: !!conn.apiKey,
+      hasAccessToken: !!conn.accessToken,
+      hasRefreshToken: !!conn.refreshToken
     }));
 
     // Get model aliases

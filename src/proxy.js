@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
-const SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "9router-default-secret-change-me"
-);
+function getJwtSecret() {
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret) return null;
+  return new TextEncoder().encode(jwtSecret);
+}
 
 export async function proxy(request) {
   const { pathname } = request.nextUrl;
@@ -14,7 +16,12 @@ export async function proxy(request) {
 
     if (token) {
       try {
-        await jwtVerify(token, SECRET);
+        const secret = getJwtSecret();
+        if (!secret) {
+          return NextResponse.redirect(new URL("/login", request.url));
+        }
+
+        await jwtVerify(token, secret);
         return NextResponse.next();
       } catch (err) {
         return NextResponse.redirect(new URL("/login", request.url));

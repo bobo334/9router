@@ -18,7 +18,7 @@ export default function LoginPage() {
       const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
 
       try {
-        const res = await fetch(`${baseUrl}/api/settings`, {
+        const res = await fetch(`${baseUrl}/api/settings/require-login`, {
           signal: controller.signal,
         });
         clearTimeout(timeoutId);
@@ -30,7 +30,7 @@ export default function LoginPage() {
             router.refresh();
             return;
           }
-          setHasPassword(!!data.hasPassword);
+          setHasPassword(true);
         } else {
           // Safe fallback on non-OK response to avoid infinite loading state.
           setHasPassword(true);
@@ -113,9 +113,6 @@ export default function LoginPage() {
               Login
             </Button>
 
-            <p className="text-xs text-center text-text-muted mt-2">
-              Default password is <code className="bg-sidebar px-1 rounded">123456</code>
-            </p>
           </form>
         </Card>
       </div>

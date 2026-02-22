@@ -2,10 +2,14 @@
 
 import { NextResponse } from "next/server";
 import { getMitmStatus, startMitm, stopMitm, getCachedPassword, setCachedPassword } from "@/mitm/manager";
+import { requireDashboardAuth } from "@/lib/serverAuth";
 
 // GET - Check MITM status
-export async function GET() {
+export async function GET(request) {
   try {
+    const auth = await requireDashboardAuth(request);
+    if (!auth.ok) return auth.response;
+
     const status = await getMitmStatus();
     return NextResponse.json({
       running: status.running,
@@ -23,6 +27,9 @@ export async function GET() {
 // POST - Start MITM proxy
 export async function POST(request) {
   try {
+    const auth = await requireDashboardAuth(request);
+    if (!auth.ok) return auth.response;
+
     const { apiKey, sudoPassword } = await request.json();
     const isWin = process.platform === "win32";
     const pwd = sudoPassword || getCachedPassword() || "";
@@ -51,6 +58,9 @@ export async function POST(request) {
 // DELETE - Stop MITM proxy
 export async function DELETE(request) {
   try {
+    const auth = await requireDashboardAuth(request);
+    if (!auth.ok) return auth.response;
+
     const { sudoPassword } = await request.json();
     const isWin = process.platform === "win32";
     const pwd = sudoPassword || getCachedPassword() || "";

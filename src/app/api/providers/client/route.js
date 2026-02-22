@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { getProviderConnections } from "@/lib/localDb";
+import { requireDashboardAuth } from "@/lib/serverAuth";
 
 // GET /api/providers/client - List all connections for client (includes sensitive fields for sync)
-export async function GET() {
+export async function GET(request) {
   try {
+    const auth = await requireDashboardAuth(request);
+    if (!auth.ok) return auth.response;
+
     const connections = await getProviderConnections();
     
     // Include sensitive fields for sync to cloud (only accessible from same origin)

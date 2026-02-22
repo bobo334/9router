@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createProviderNode, getProviderNodes } from "@/models";
 import { OPENAI_COMPATIBLE_PREFIX, ANTHROPIC_COMPATIBLE_PREFIX } from "@/shared/constants/providers";
 import { generateId } from "@/shared/utils";
+import { requireDashboardAuth } from "@/lib/serverAuth";
 
 const OPENAI_COMPATIBLE_DEFAULTS = {
   baseUrl: "https://api.openai.com/v1",
@@ -12,8 +13,11 @@ const ANTHROPIC_COMPATIBLE_DEFAULTS = {
 };
 
 // GET /api/provider-nodes - List all provider nodes
-export async function GET() {
+export async function GET(request) {
   try {
+    const auth = await requireDashboardAuth(request);
+    if (!auth.ok) return auth.response;
+
     const nodes = await getProviderNodes();
     return NextResponse.json({ nodes });
   } catch (error) {
@@ -25,6 +29,9 @@ export async function GET() {
 // POST /api/provider-nodes - Create provider node
 export async function POST(request) {
   try {
+    const auth = await requireDashboardAuth(request);
+    if (!auth.ok) return auth.response;
+
     const body = await request.json();
     const { name, prefix, apiType, baseUrl, type } = body;
 

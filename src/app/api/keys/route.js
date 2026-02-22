@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { getApiKeys, createApiKey } from "@/lib/localDb";
 import { getConsistentMachineId } from "@/shared/utils/machineId";
+import { requireDashboardAuth } from "@/lib/serverAuth";
 
 // GET /api/keys - List API keys
-export async function GET() {
+export async function GET(request) {
   try {
+    const auth = await requireDashboardAuth(request);
+    if (!auth.ok) return auth.response;
+
     const keys = await getApiKeys();
     return NextResponse.json({ keys });
   } catch (error) {
@@ -16,6 +20,9 @@ export async function GET() {
 // POST /api/keys - Create new API key
 export async function POST(request) {
   try {
+    const auth = await requireDashboardAuth(request);
+    if (!auth.ok) return auth.response;
+
     const body = await request.json();
     const { name } = body;
 
